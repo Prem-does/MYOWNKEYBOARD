@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Required by the Android system to register the IME -->
+<input-method xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- No settings activity for ultimate minimalism -->
+</input-method>
