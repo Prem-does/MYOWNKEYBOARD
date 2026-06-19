@@ -16,6 +16,7 @@ import android.view.inputmethod.EditorInfo
 class CalmInputService : InputMethodService() {
 
     private lateinit var keyboardView: CalmKeyboardView
+    private lateinit var prefs: CalmKeyboardPrefs
 
     private var shiftState = SHIFT_OFF
     private var lastShiftTapTime = 0L
@@ -28,6 +29,7 @@ class CalmInputService : InputMethodService() {
     }
 
     override fun onCreateInputView(): View {
+        prefs = CalmKeyboardPrefs(this)
         keyboardView = CalmKeyboardView(this)
         keyboardView.listener = this::onKey
         return keyboardView
@@ -37,11 +39,16 @@ class CalmInputService : InputMethodService() {
         super.onStartInputView(info, restarting)
         shiftState = SHIFT_OFF
         keyboardView.updateShiftState(SHIFT_OFF)
-        keyboardView.reset()
+        keyboardView.reset(prefs.startInSymbols)
         info?.let { updateEnterLabel(it) }
     }
 
     private fun updateEnterLabel(info: EditorInfo) {
+        if (!prefs.showActionLabelOnEnter) {
+            keyboardView.updateEnterLabel("↩")
+            return
+        }
+
         val action = info.imeOptions and EditorInfo.IME_MASK_ACTION
         val label = when (action) {
             EditorInfo.IME_ACTION_SEARCH -> "Search"
@@ -56,6 +63,8 @@ class CalmInputService : InputMethodService() {
 
     /** Trigger haptic feedback with API-level compatibility. */
     private fun performHapticFeedback() {
+        if (!prefs.hapticsEnabled) return
+
         @Suppress("DEPRECATION")
         val constant = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             HapticFeedbackConstants.KEYBOARD_PRESS
@@ -73,6 +82,7 @@ class CalmInputService : InputMethodService() {
             CalmKeyboardView.KEY_SHIFT  -> handleShift()
             CalmKeyboardView.KEY_SPACE  -> handleSpace()
             CalmKeyboardView.KEY_ENTER  -> handleEnter()
+            CalmKeyboardView.KEY_CLOSE  -> handleClose()
             CalmKeyboardView.KEY_MODE   -> handleModeToggle()
             else                        -> handleChar(code)
         }
@@ -97,9 +107,13 @@ class CalmInputService : InputMethodService() {
         }
     }
 
+    private fun handleClose() {
+        requestHideSelf(0)
+    }
+
     private fun handleChar(code: Int) {
         currentInputConnection?.commitText(code.toChar().toString(), 1)
-        if (shiftState == SHIFT_ON && Character.isLetter(code)) {
+        if (prefs.autoShiftReset && shiftState == SHIFT_ON && Character.isLetter(code)) {
             shiftState = SHIFT_OFF
             keyboardView.updateShiftState(SHIFT_OFF)
         }

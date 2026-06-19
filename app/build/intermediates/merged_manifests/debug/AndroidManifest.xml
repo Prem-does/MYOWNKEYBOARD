@@ -19,7 +19,6 @@
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:debuggable="true"
         android:extractNativeLibs="false"
-        android:icon="@mipmap/ic_launcher"
         android:label="Calm Keyboard"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar" >
@@ -38,6 +37,11 @@
                 android:name="android.view.im"
                 android:resource="@xml/method" />
         </service>
+
+        <activity
+            android:name="com.calm.launcher.ime.CalmKeyboardSettingsActivity"
+            android:exported="true"
+            android:label="Calm Keyboard Settings" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

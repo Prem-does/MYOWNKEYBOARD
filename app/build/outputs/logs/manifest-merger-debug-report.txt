@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:1-28:12
-INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:1-28:12
-INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:1-28:12
-INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:1-28:12
+ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:1-31:12
+INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:1-31:12
+INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:1-31:12
+INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:1-31:12
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\premk\.gradle\caches\transforms-3\e68e4fdff1d051438206e5568977e65a\transformed\material-1.11.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\premk\.gradle\caches\transforms-3\508d78332f884845dd93b0f00fafc220\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] C:\Users\premk\.gradle\caches\transforms-3\edab528121273c70aa686dbdfd441d19\transformed\constraintlayout-2.0.1\AndroidManifest.xml:2:1-11:12
@@ -46,7 +46,6 @@ MERGED from [androidx.documentfile:documentfile:1.0.0] C:\Users\premk\.gradle\ca
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\Users\premk\.gradle\caches\transforms-3\cee5070e2b3c3550d8d519ec55f2f45f\transformed\localbroadcastmanager-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.print:print:1.0.0] C:\Users\premk\.gradle\caches\transforms-3\70703d188898cef973113a1344a4ab49\transformed\print-1.0.0\AndroidManifest.xml:17:1-22:12
 	package
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:3:5-36
 		INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml
 	android:versionName
 		INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml
@@ -55,8 +54,8 @@ MERGED from [androidx.print:print:1.0.0] C:\Users\premk\.gradle\caches\transform
 	xmlns:android
 		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:2:11-69
 application
-ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:5:5-26:19
-INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:5:5-26:19
+ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:4:5-29:19
+INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:4:5-29:19
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\premk\.gradle\caches\transforms-3\e68e4fdff1d051438206e5568977e65a\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\premk\.gradle\caches\transforms-3\e68e4fdff1d051438206e5568977e65a\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] C:\Users\premk\.gradle\caches\transforms-3\edab528121273c70aa686dbdfd441d19\transformed\constraintlayout-2.0.1\AndroidManifest.xml:9:5-20
@@ -78,37 +77,43 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\premk\.gradle\cach
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] C:\Users\premk\.gradle\caches\transforms-3\3db0ecba79cca560ca8a27d2b7d48122\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:9:9-35
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:7:9-35
 	android:label
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:8:9-38
-	android:icon
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:7:9-43
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:6:9-38
 	android:allowBackup
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:6:9-35
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:5:9-35
 	android:theme
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:10:9-71
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:8:9-71
 service#com.calm.launcher.ime.CalmInputService
-ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:13:9-24:19
+ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:11:9-22:19
 	android:label
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:15:13-42
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:13:13-42
 	android:exported
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:17:13-36
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:15:13-36
 	android:permission
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:16:13-70
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:14:13-70
 	android:name
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:14:13-45
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:12:13-45
 intent-filter#action:name:android.view.InputMethod
-ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:18:13-20:29
+ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:16:13-18:29
 action#android.view.InputMethod
-ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:19:17-67
+ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:17:17-67
 	android:name
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:19:25-64
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:17:25-64
 meta-data#android.view.im
-ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:21:13-23:50
+ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:19:13-21:50
 	android:resource
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:23:17-47
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:21:17-47
 	android:name
-		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:22:17-47
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:20:17-47
+activity#com.calm.launcher.ime.CalmKeyboardSettingsActivity
+ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:24:9-27:54
+	android:label
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:27:13-51
+	android:exported
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:26:13-36
+	android:name
+		ADDED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml:25:13-57
 uses-sdk
 INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\premk\MYOWNKEYBOARD\app\src\main\AndroidManifest.xml

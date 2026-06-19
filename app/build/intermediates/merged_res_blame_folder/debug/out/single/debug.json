@@ -1,5 +1,9 @@
 [
     {
+        "merged": "C:\\Users\\premk\\.gradle\\daemon\\8.4\\com.calm.launcher.ime.app-merged_res-31:\\xml_method.xml.flat",
+        "source": "C:\\Users\\premk\\.gradle\\daemon\\8.4\\com.calm.launcher.ime.app-main-33:\\xml\\method.xml"
+    },
+    {
         "merged": "com.calm.launcher.ime.app-merged_res-31:/xml_method.xml.flat",
         "source": "com.calm.launcher.ime.app-main-33:/xml/method.xml"
     }
