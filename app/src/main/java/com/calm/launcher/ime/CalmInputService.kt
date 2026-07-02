@@ -35,6 +35,8 @@ class CalmInputService : InputMethodService() {
         keyboardView = CalmKeyboardView(this)
         keyboardView.listener = this::onKey
         keyboardView.suggestionListener = this::onSuggestion
+        keyboardView.shiftLongPressListener = this::handleShiftLongPress
+        suggestionEngine.onLoaded = { keyboardView.post { updateSuggestions() } }
         return keyboardView
     }
 
@@ -162,6 +164,11 @@ class CalmInputService : InputMethodService() {
             SHIFT_LOCK -> SHIFT_OFF
             else       -> SHIFT_OFF
         }
+        keyboardView.updateShiftState(shiftState)
+    }
+
+    private fun handleShiftLongPress() {
+        shiftState = SHIFT_LOCK
         keyboardView.updateShiftState(shiftState)
     }
 }

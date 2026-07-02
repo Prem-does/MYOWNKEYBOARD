@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 
 class CalmKeyboardView(context: Context) : View(context) {
 
@@ -75,6 +76,11 @@ class CalmKeyboardView(context: Context) : View(context) {
     private var rowHeight = 0f
     private var contentTop = 0f
     private var contentLeft = 0f
+    private var shiftLongPressed = false
+    private var shiftLongPressRunnable: Runnable? = null
+    private var deleteRepeatRunnable: Runnable? = null
+    private val deleteRepeatInitialDelayMs = 120L
+    private val deleteRepeatIntervalMs = 45L
 
     private val density get() = resources.displayMetrics.density
     private val defaultHeightDp = 260f
@@ -89,6 +95,7 @@ class CalmKeyboardView(context: Context) : View(context) {
 
     var listener: ((Int) -> Unit)? = null
     var suggestionListener: ((String) -> Unit)? = null
+    var shiftLongPressListener: (() -> Unit)? = null
     private var downKey: Key? = null
 
     fun reset() {
@@ -96,6 +103,7 @@ class CalmKeyboardView(context: Context) : View(context) {
     }
 
     fun reset(startInSymbols: Boolean) {
+        stopDeleteRepeat()
         isSymbols = startInSymbols
         shiftState = 0
         downKey = null
@@ -281,7 +289,7 @@ class CalmKeyboardView(context: Context) : View(context) {
 
         addKey(KEY_MODE, "ABC", RectF(contentLeft, r3y, contentLeft + leftWidth, r3y + rowHeight), KeyRole.FUNCTION)
         addKey(KEY_SPACE, "", RectF(contentLeft + leftWidth + gap, r3y, contentLeft + leftWidth + gap + spaceWidth, r3y + rowHeight), KeyRole.ACTION)
-        addKey(KEY_ENTER, enterLabel, RectF(contentLeft + leftWidth + gap + spaceWidth + gap, r3y, contentLeft + leftWidth + gap + spaceWidth + gap + rightWidth, r3y + rowHeight), KeyRole.FUNCTION)
+        addKey(KEY_ENTER, "↩︎", RectF(contentLeft + leftWidth + gap + spaceWidth + gap, r3y, contentLeft + leftWidth + gap + spaceWidth + gap + rightWidth, r3y + rowHeight), KeyRole.FUNCTION)
     }
 
     private fun buildRow(
@@ -390,25 +398,64 @@ class CalmKeyboardView(context: Context) : View(context) {
             MotionEvent.ACTION_DOWN,
             MotionEvent.ACTION_POINTER_DOWN -> {
                 downKey = findKey(event.x, event.y)
-                downKey?.let { key ->
-                    if (key.role == KeyRole.SUGGESTION && key.payload != null) {
-                        suggestionListener?.invoke(key.payload)
-                    } else {
-                        listener?.invoke(key.code)
+                shiftLongPressed = false
+                shiftLongPressRunnable?.let { removeCallbacks(it) }
+                stopDeleteRepeat()
+
+                if (downKey?.code == KEY_SHIFT) {
+                    shiftLongPressRunnable = Runnable {
+                        if (downKey?.code == KEY_SHIFT) {
+                            shiftLongPressed = true
+                            shiftLongPressListener?.invoke()
+                            invalidate()
+                        }
                     }
+                    postDelayed(shiftLongPressRunnable, ViewConfiguration.getLongPressTimeout().toLong())
+                } else if (downKey?.code == KEY_DEL) {
+                    listener?.invoke(KEY_DEL)
+                    deleteRepeatRunnable = object : Runnable {
+                        override fun run() {
+                            if (downKey?.code == KEY_DEL) {
+                                listener?.invoke(KEY_DEL)
+                                postDelayed(this, deleteRepeatIntervalMs)
+                            } else {
+                                stopDeleteRepeat()
+                            }
+                        }
+                    }
+                    postDelayed(deleteRepeatRunnable, deleteRepeatInitialDelayMs)
                 }
+
                 invalidate()
                 return true
             }
             MotionEvent.ACTION_UP,
             MotionEvent.ACTION_POINTER_UP,
             MotionEvent.ACTION_CANCEL -> {
+                shiftLongPressRunnable?.let { removeCallbacks(it) }
+                stopDeleteRepeat()
+                val key = downKey
+
+                if (!shiftLongPressed && key != null && key.code != KEY_DEL) {
+                    if (key.role == KeyRole.SUGGESTION && key.payload != null) {
+                        suggestionListener?.invoke(key.payload)
+                    } else {
+                        listener?.invoke(key.code)
+                    }
+                }
+
                 downKey = null
+                shiftLongPressRunnable = null
                 invalidate()
                 return true
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    private fun stopDeleteRepeat() {
+        deleteRepeatRunnable?.let { removeCallbacks(it) }
+        deleteRepeatRunnable = null
     }
 
     private fun findKey(x: Float, y: Float): Key? {

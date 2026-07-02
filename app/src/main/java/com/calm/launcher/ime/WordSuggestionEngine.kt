@@ -22,21 +22,29 @@ class WordSuggestionEngine(
     private val frequencyMap = mutableMapOf<String, Float>()
     private val personalFrequency = mutableMapOf<String, Int>()
     private val topWords = mutableListOf<String>()
+    private val staticFallback = listOf("the", "to", "and")
     private val minSuggestions = 3
     private val maxSuggestions = 4
+    private var loaded = false
+
+    var onLoaded: (() -> Unit)? = null
 
     init {
-        try {
-            loadDictionaryFromAssets(assetFileName)
-            updateTopWords()
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to load suggestion dictionary: ${e.message}")
-        }
+        Thread {
+            try {
+                loadDictionaryFromAssets(assetFileName)
+                updateTopWords()
+                loaded = true
+                onLoaded?.invoke()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load suggestion dictionary: ${e.message}")
+            }
+        }.start()
     }
 
     fun suggest(rawInput: String, maxResults: Int = maxSuggestions): List<String> {
         val prefix = normalize(rawInput)
-        if (prefix.isEmpty()) return topWords.take(maxResults)
+        if (prefix.isEmpty()) return if (loaded) topWords.take(maxResults) else staticFallback
 
         val candidates = mutableListOf<Suggestion>()
 
