@@ -34,6 +34,7 @@ class CalmInputService : InputMethodService() {
         suggestionEngine = WordSuggestionEngine(this, "wordfreq_large_en.csv")
         keyboardView = CalmKeyboardView(this)
         keyboardView.listener = this::onKey
+        keyboardView.suggestionListener = this::onSuggestion
         return keyboardView
     }
 
@@ -122,6 +123,18 @@ class CalmInputService : InputMethodService() {
             keyboardView.updateShiftState(SHIFT_OFF)
         }
 
+        updateSuggestions()
+    }
+
+    private fun onSuggestion(word: String) {
+        val ic = currentInputConnection ?: return
+        val surrounding = ic.getTextBeforeCursor(32, 0)?.toString() ?: ""
+        val lastWord = surrounding.takeLastWhile { it.isLetter() || it == '\'' }
+        if (lastWord.isNotEmpty()) {
+            ic.deleteSurroundingText(lastWord.length, 0)
+        }
+        ic.commitText(word + " ", 1)
+        suggestionEngine.learnWord(word)
         updateSuggestions()
     }
 

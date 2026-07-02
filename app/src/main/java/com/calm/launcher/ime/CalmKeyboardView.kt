@@ -18,6 +18,7 @@ class CalmKeyboardView(context: Context) : View(context) {
         const val KEY_DEL   = -5
         const val KEY_SPACE = 32
         const val KEY_CLOSE = -6
+        const val KEY_SUGGESTION = -7
     }
 
     private enum class KeyRole {
@@ -31,11 +32,11 @@ class CalmKeyboardView(context: Context) : View(context) {
         val code: Int,
         val label: String,
         val bounds: RectF,
-        val role: KeyRole
+        val role: KeyRole,
+        val payload: String? = null
     )
 
     private val keys = mutableListOf<Key>()
-    private val titleText = "Calm"
     private var suggestionLabels = listOf("the", "to", "and")
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -55,6 +56,17 @@ class CalmKeyboardView(context: Context) : View(context) {
         style = Paint.Style.FILL
     }
 
+    private val suggestionFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(40, 255, 255, 255)
+        style = Paint.Style.FILL
+    }
+
+    private val suggestionStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(120, 255, 255, 255)
+        style = Paint.Style.STROKE
+        strokeWidth = 1.5f
+    }
+
     private var isSymbols = false
     private var shiftState = 0
     private var enterLabel = "ENTER"
@@ -68,10 +80,12 @@ class CalmKeyboardView(context: Context) : View(context) {
     private val defaultHeightDp = 260f
     private val minHeightDp = 260f
     private val maxHeightDp = 280f
-    private val minRowHeightDp = 42f
-    private val maxRowHeightDp = 48f
-    private val titleHeightDp = 40f
-    private val suggestionHeightDp = 24f
+    private val minRowHeightDp = 44f
+    private val maxRowHeightDp = 58f
+    private val titleHeightDp = 0f
+    private val suggestionHeightDp = 34f
+    private val keyGapDp = 5f
+    private val suggestionGapDp = 8f
 
     var listener: ((Int) -> Unit)? = null
     private var downKey: Key? = null
@@ -106,10 +120,11 @@ class CalmKeyboardView(context: Context) : View(context) {
         invalidate()
     }
 
-    private fun col(col: Float) = contentLeft + col * cellW
+    private fun col(col: Float) = contentLeft + col * cellW + col * keyGap
     private fun row(row: Float) = contentTop + row * rowHeight
 
-    private val cellW: Float get() = (width - contentLeft * 2f) / 10f
+    private val keyGap: Float get() = keyGapDp * density
+    private val cellW: Float get() = (width - contentLeft * 2f - keyGap * 9f) / 10f
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
@@ -135,19 +150,19 @@ class CalmKeyboardView(context: Context) : View(context) {
         if (width <= 0 || height <= 0) return
         keys.clear()
 
-        contentLeft = width * 0.04f
-        titleHeight = titleHeightDp * density
+        contentLeft = width * 0.035f
+        titleHeight = 0f
         suggestionHeight = suggestionHeightDp * density
 
-        rowHeight = (height - titleHeight - suggestionHeight) / 4f
+        rowHeight = (height - suggestionHeight) / 4f
         rowHeight = rowHeight.coerceIn(minRowHeightDp * density, maxRowHeightDp * density)
 
-        contentTop = titleHeight + suggestionHeight
+        contentTop = suggestionHeight
         if (isSymbols) buildSymbols() else buildQwerty()
     }
 
-    private fun addKey(code: Int, label: String, bounds: RectF, role: KeyRole = KeyRole.LETTER) {
-        keys.add(Key(code, label, bounds, role))
+    private fun addKey(code: Int, label: String, bounds: RectF, role: KeyRole = KeyRole.LETTER, payload: String? = null) {
+        keys.add(Key(code, label, bounds, role, payload))
     }
 
     private fun buildQwerty() {
@@ -162,7 +177,7 @@ class CalmKeyboardView(context: Context) : View(context) {
 
         addKey(
             KEY_SHIFT,
-            "SHIFT",
+            shiftLabel(),
             RectF(0f, thirdRowY, wide, thirdRowY + rowHeight),
             KeyRole.FUNCTION
         )
@@ -175,7 +190,7 @@ class CalmKeyboardView(context: Context) : View(context) {
         val deleteX = wide + 7f * unit
         addKey(
             KEY_DEL,
-            "DEL",
+            "<",
             RectF(deleteX, thirdRowY, deleteX + wide, thirdRowY + rowHeight),
             KeyRole.FUNCTION
         )
@@ -185,18 +200,31 @@ class CalmKeyboardView(context: Context) : View(context) {
 
     private fun buildActionRow() {
         val rowY = row(3f)
-        val keyAreaWidth = width - contentLeft * 2f
-        val leftWidth = maxOf(72f, keyAreaWidth * 0.20f)
-        val rightAreaWidth = maxOf(92f, keyAreaWidth * 0.30f)
-        val centerWidth = keyAreaWidth - leftWidth - rightAreaWidth
-        val rightStart = contentLeft + keyAreaWidth - rightAreaWidth
-        val rightGap = width * 0.011f
-        val rightButtonWidth = (rightAreaWidth - rightGap) / 2f
+        val unit = cellW
+        val leftWidth = maxOf(72f, unit * 1.5f)
+        val rightWidth = maxOf(72f, unit * 1.5f)
+        val gap = keyGap
+        val spaceWidth = width - contentLeft * 2f - leftWidth - rightWidth * 2f - gap * 2f
 
         addKey(KEY_MODE, "?123", RectF(contentLeft, rowY, contentLeft + leftWidth, rowY + rowHeight), KeyRole.ACTION)
-        addKey(KEY_SPACE, "Space bar", RectF(contentLeft + leftWidth, rowY, contentLeft + leftWidth + centerWidth, rowY + rowHeight), KeyRole.ACTION)
-        addKey(KEY_ENTER, "↩︎", RectF(rightStart, rowY, rightStart + rightButtonWidth, rowY + rowHeight), KeyRole.ACTION)
-        addKey(KEY_CLOSE, "×", RectF(rightStart + rightButtonWidth + rightGap, rowY, contentLeft + keyAreaWidth, rowY + rowHeight), KeyRole.ACTION)
+        addKey(
+            KEY_SPACE,
+            "Space bar",
+            RectF(contentLeft + leftWidth + gap, rowY, contentLeft + leftWidth + gap + spaceWidth, rowY + rowHeight),
+            KeyRole.ACTION
+        )
+        addKey(
+            KEY_ENTER,
+            "↩︎",
+            RectF(contentLeft + leftWidth + gap + spaceWidth + gap, rowY, contentLeft + leftWidth + gap + spaceWidth + gap + rightWidth, rowY + rowHeight),
+            KeyRole.ACTION
+        )
+        addKey(
+            KEY_CLOSE,
+            "×",
+            RectF(contentLeft + leftWidth + gap + spaceWidth + gap + rightWidth + gap, rowY, contentLeft + keyAreaWidth, rowY + rowHeight),
+            KeyRole.ACTION
+        )
     }
 
     fun updateSuggestions(suggestions: List<String>) {
@@ -206,15 +234,17 @@ class CalmKeyboardView(context: Context) : View(context) {
     }
 
     private fun buildSuggestions() {
-        val keyAreaWidth = width - contentLeft * 2f
+        val gap = suggestionGapDp * density
+        val keyAreaWidth = width - contentLeft * 2f - gap * (suggestionLabels.size - 1)
         val segmentWidth = keyAreaWidth / suggestionLabels.size.toFloat()
         suggestionLabels.forEachIndexed { index, label ->
-            val left = contentLeft + index * segmentWidth
+            val left = contentLeft + index * (segmentWidth + gap)
             addKey(
-                (label + index).hashCode(),
+                KEY_SUGGESTION,
                 label,
                 RectF(left, 0f, left + segmentWidth, suggestionHeight),
-                KeyRole.SUGGESTION
+                KeyRole.SUGGESTION,
+                label
             )
         }
     }
@@ -274,6 +304,9 @@ class CalmKeyboardView(context: Context) : View(context) {
     private fun labelFor(c: Char): String =
         if (shiftState == 0) c.lowercaseChar().toString() else c.uppercaseChar().toString()
 
+    private fun shiftLabel(): String =
+        if (shiftState == 0) "^" else "↓"
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
@@ -296,47 +329,21 @@ class CalmKeyboardView(context: Context) : View(context) {
     }
 
     private fun drawTitle(canvas: Canvas) {
-        paint.color = Color.WHITE
-
-        paint.textSize = titleHeight * 0.18f
-        paint.typeface = Typeface.SANS_SERIF
-        val headerBaseline = titleHeight * 0.16f - (paint.ascent() + paint.descent()) / 2f
-        canvas.drawText("KEYBOARD", width / 2f, headerBaseline, paint)
-
-        paint.textSize = titleHeight * 0.45f
-        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        val titleBaseline = titleHeight * 0.55f - (paint.ascent() + paint.descent()) / 2f
-        canvas.drawText(titleText, width / 2f, titleBaseline, paint)
-
-        val lineY = titleHeight - 12f
-        canvas.drawLine(width * 0.18f, lineY, width * 0.82f, lineY, paint)
-
-        paint.typeface = Typeface.SANS_SERIF
+        // No title label. Suggestion row has enough space.
     }
 
     private fun drawSuggestions(canvas: Canvas) {
-        val lineY = suggestionHeight - 1f
         val labelSize = suggestionHeight * 0.42f
-        mutedPaint.textSize = labelSize
+        paint.textSize = labelSize
+        paint.typeface = Typeface.SANS_SERIF
 
-        keys.filter { it.role == KeyRole.SUGGESTION }.forEachIndexed { index, key ->
-            val selected = index == 1
-            paint.textSize = labelSize
-            paint.typeface = if (selected) Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD) else Typeface.SANS_SERIF
-            paint.color = if (selected) Color.WHITE else Color.argb(150, 255, 255, 255)
+        for (key in keys.filter { it.role == KeyRole.SUGGESTION }) {
+            canvas.drawRoundRect(key.bounds, 16f, 16f, suggestionFillPaint)
+            canvas.drawRoundRect(key.bounds, 16f, 16f, suggestionStrokePaint)
 
             val baseline = key.bounds.centerY() - (paint.ascent() + paint.descent()) / 2f
             canvas.drawText(key.label, key.bounds.centerX(), baseline, paint)
-
-            if (selected) {
-                val underlineLeft = key.bounds.left + key.bounds.width() * 0.12f
-                val underlineRight = key.bounds.right - key.bounds.width() * 0.12f
-                canvas.drawLine(underlineLeft, lineY, underlineRight, lineY, paint)
-            }
         }
-
-        paint.color = Color.WHITE
-        paint.typeface = Typeface.SANS_SERIF
     }
 
     private fun drawKeyLabel(canvas: Canvas, key: Key) {
@@ -366,8 +373,12 @@ class CalmKeyboardView(context: Context) : View(context) {
             MotionEvent.ACTION_DOWN,
             MotionEvent.ACTION_POINTER_DOWN -> {
                 downKey = findKey(event.x, event.y)
-                downKey?.let {
-                    listener?.invoke(it.code)
+                downKey?.let { key ->
+                    if (key.role == KeyRole.SUGGESTION && key.payload != null) {
+                        suggestionListener?.invoke(key.payload)
+                    } else {
+                        listener?.invoke(key.code)
+                    }
                 }
                 invalidate()
                 return true
