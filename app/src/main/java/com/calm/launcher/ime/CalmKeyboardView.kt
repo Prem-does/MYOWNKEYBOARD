@@ -36,7 +36,7 @@ class CalmKeyboardView(context: Context) : View(context) {
 
     private val keys = mutableListOf<Key>()
     private val titleText = "Calm"
-    private val suggestionLabels = listOf("calmly", "Calm", "calmed")
+    private var suggestionLabels = listOf("the", "to", "and")
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -199,13 +199,19 @@ class CalmKeyboardView(context: Context) : View(context) {
         addKey(KEY_CLOSE, "×", RectF(rightStart + rightButtonWidth + rightGap, rowY, contentLeft + keyAreaWidth, rowY + rowHeight), KeyRole.ACTION)
     }
 
+    fun updateSuggestions(suggestions: List<String>) {
+        suggestionLabels = if (suggestions.isEmpty()) listOf("the", "to", "and") else suggestions
+        rebuild()
+        invalidate()
+    }
+
     private fun buildSuggestions() {
         val keyAreaWidth = width - contentLeft * 2f
         val segmentWidth = keyAreaWidth / suggestionLabels.size.toFloat()
         suggestionLabels.forEachIndexed { index, label ->
             val left = contentLeft + index * segmentWidth
             addKey(
-                label.hashCode(),
+                (label + index).hashCode(),
                 label,
                 RectF(left, 0f, left + segmentWidth, suggestionHeight),
                 KeyRole.SUGGESTION

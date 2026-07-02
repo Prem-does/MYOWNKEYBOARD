@@ -17,6 +17,7 @@ class CalmInputService : InputMethodService() {
 
     private lateinit var keyboardView: CalmKeyboardView
     private lateinit var prefs: CalmKeyboardPrefs
+    private lateinit var suggestionEngine: WordSuggestionEngine
 
     private var shiftState = SHIFT_OFF
     private var lastShiftTapTime = 0L
@@ -30,6 +31,7 @@ class CalmInputService : InputMethodService() {
 
     override fun onCreateInputView(): View {
         prefs = CalmKeyboardPrefs(this)
+        suggestionEngine = WordSuggestionEngine(this, "wordfreq_large_en.csv")
         keyboardView = CalmKeyboardView(this)
         keyboardView.listener = this::onKey
         return keyboardView
@@ -112,11 +114,23 @@ class CalmInputService : InputMethodService() {
     }
 
     private fun handleChar(code: Int) {
-        currentInputConnection?.commitText(code.toChar().toString(), 1)
+        val char = code.toChar().toString()
+        currentInputConnection?.commitText(char, 1)
+
         if (prefs.autoShiftReset && shiftState == SHIFT_ON && Character.isLetter(code)) {
             shiftState = SHIFT_OFF
             keyboardView.updateShiftState(SHIFT_OFF)
         }
+
+        updateSuggestions()
+    }
+
+    private fun updateSuggestions() {
+        val ic = currentInputConnection ?: return
+        val surrounding = ic.getTextBeforeCursor(32, 0)?.toString() ?: ""
+        val lastWord = surrounding.takeLastWhile { it.isLetter() || it == '\'' }
+        val suggestions = suggestionEngine.suggest(lastWord)
+        keyboardView.updateSuggestions(suggestions)
     }
 
     private fun handleModeToggle() {
