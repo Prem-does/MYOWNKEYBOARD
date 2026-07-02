@@ -97,6 +97,7 @@ class CalmKeyboardView(context: Context) : View(context) {
     var suggestionListener: ((String) -> Unit)? = null
     var shiftLongPressListener: (() -> Unit)? = null
     private var downKey: Key? = null
+    private var activePointerId = -1
 
     fun reset() {
         reset(startInSymbols = false)
@@ -394,63 +395,85 @@ class CalmKeyboardView(context: Context) : View(context) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        val actionIndex = event.actionIndex
+        val pointerId = event.getPointerId(actionIndex)
+
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN,
-            MotionEvent.ACTION_POINTER_DOWN -> {
-                downKey = findKey(event.x, event.y)
-                shiftLongPressed = false
-                shiftLongPressRunnable?.let { removeCallbacks(it) }
-                stopDeleteRepeat()
-
-                if (downKey?.code == KEY_SHIFT) {
-                    shiftLongPressRunnable = Runnable {
-                        if (downKey?.code == KEY_SHIFT) {
-                            shiftLongPressed = true
-                            shiftLongPressListener?.invoke()
-                            invalidate()
-                        }
-                    }
-                    postDelayed(shiftLongPressRunnable, ViewConfiguration.getLongPressTimeout().toLong())
-                } else if (downKey?.code == KEY_DEL) {
-                    listener?.invoke(KEY_DEL)
-                    deleteRepeatRunnable = object : Runnable {
-                        override fun run() {
-                            if (downKey?.code == KEY_DEL) {
-                                listener?.invoke(KEY_DEL)
-                                postDelayed(this, deleteRepeatIntervalMs)
-                            } else {
-                                stopDeleteRepeat()
-                            }
-                        }
-                    }
-                    postDelayed(deleteRepeatRunnable, deleteRepeatInitialDelayMs)
-                }
-
-                invalidate()
+            MotionEvent.ACTION_DOWN -> {
+                activePointerId = pointerId
+                handleTouchDown(event.getX(actionIndex), event.getY(actionIndex))
                 return true
             }
-            MotionEvent.ACTION_UP,
-            MotionEvent.ACTION_POINTER_UP,
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                return true
+            }
+            MotionEvent.ACTION_UP -> {
+                if (pointerId != activePointerId) return true
+                activePointerId = -1
+                handleTouchUp()
+                return true
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+                return true
+            }
             MotionEvent.ACTION_CANCEL -> {
-                shiftLongPressRunnable?.let { removeCallbacks(it) }
-                stopDeleteRepeat()
-                val key = downKey
-
-                if (!shiftLongPressed && key != null && key.code != KEY_DEL) {
-                    if (key.role == KeyRole.SUGGESTION && key.payload != null) {
-                        suggestionListener?.invoke(key.payload)
-                    } else {
-                        listener?.invoke(key.code)
-                    }
-                }
-
-                downKey = null
-                shiftLongPressRunnable = null
-                invalidate()
+                activePointerId = -1
+                handleTouchUp()
                 return true
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    private fun handleTouchDown(x: Float, y: Float) {
+        downKey = findKey(x, y)
+        shiftLongPressed = false
+        shiftLongPressRunnable?.let { removeCallbacks(it) }
+        stopDeleteRepeat()
+
+        if (downKey?.code == KEY_SHIFT) {
+            shiftLongPressRunnable = Runnable {
+                if (downKey?.code == KEY_SHIFT) {
+                    shiftLongPressed = true
+                    shiftLongPressListener?.invoke()
+                    invalidate()
+                }
+            }
+            postDelayed(shiftLongPressRunnable, ViewConfiguration.getLongPressTimeout().toLong())
+        } else if (downKey?.code == KEY_DEL) {
+            listener?.invoke(KEY_DEL)
+            deleteRepeatRunnable = object : Runnable {
+                override fun run() {
+                    if (downKey?.code == KEY_DEL) {
+                        listener?.invoke(KEY_DEL)
+                        postDelayed(this, deleteRepeatIntervalMs)
+                    } else {
+                        stopDeleteRepeat()
+                    }
+                }
+            }
+            postDelayed(deleteRepeatRunnable, deleteRepeatInitialDelayMs)
+        }
+
+        invalidate()
+    }
+
+    private fun handleTouchUp() {
+        shiftLongPressRunnable?.let { removeCallbacks(it) }
+        stopDeleteRepeat()
+        val key = downKey
+
+        if (!shiftLongPressed && key != null && key.code != KEY_DEL) {
+            if (key.role == KeyRole.SUGGESTION && key.payload != null) {
+                suggestionListener?.invoke(key.payload)
+            } else {
+                listener?.invoke(key.code)
+            }
+        }
+
+        downKey = null
+        shiftLongPressRunnable = null
+        invalidate()
     }
 
     private fun stopDeleteRepeat() {
