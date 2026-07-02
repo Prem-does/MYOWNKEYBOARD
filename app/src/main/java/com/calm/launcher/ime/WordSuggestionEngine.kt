@@ -21,11 +21,14 @@ class WordSuggestionEngine(
     private val root = TrieNode()
     private val frequencyMap = mutableMapOf<String, Float>()
     private val personalFrequency = mutableMapOf<String, Int>()
-    private val maxSuggestions = 5
+    private val topWords = mutableListOf<String>()
+    private val minSuggestions = 3
+    private val maxSuggestions = 4
 
     init {
         try {
             loadDictionaryFromAssets(assetFileName)
+            updateTopWords()
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load suggestion dictionary: ${e.message}")
         }
@@ -33,7 +36,7 @@ class WordSuggestionEngine(
 
     fun suggest(rawInput: String, maxResults: Int = maxSuggestions): List<String> {
         val prefix = normalize(rawInput)
-        if (prefix.isEmpty()) return emptyList()
+        if (prefix.isEmpty()) return topWords.take(maxResults)
 
         val candidates = mutableListOf<Suggestion>()
 
@@ -45,11 +48,28 @@ class WordSuggestionEngine(
             candidates += correctionCandidates(prefix, maxResults * 3)
         }
 
-        return candidates
+        // 3. fallback to top words that start with the prefix
+        if (candidates.isEmpty()) {
+            candidates += topWords
+                .filter { it.startsWith(prefix) }
+                .map { Suggestion(it, score(it, prefix)) }
+        }
+
+        val result = candidates
             .sortedWith(compareByDescending<Suggestion> { it.score }.thenBy { it.word })
             .map { it.word }
             .distinct()
             .take(maxResults)
+            .toMutableList()
+
+        if (result.size < minSuggestions) {
+            for (word in topWords) {
+                if (result.size >= minSuggestions) break
+                if (word !in result) result += word
+            }
+        }
+
+        return result
     }
 
     fun learnWord(word: String) {
@@ -163,6 +183,14 @@ class WordSuggestionEngine(
                 }
             }
         }
+    }
+
+    private fun updateTopWords() {
+        topWords.clear()
+        topWords += frequencyMap.entries
+            .sortedByDescending { it.value }
+            .map { it.key }
+            .take(maxSuggestions)
     }
 
     private data class Suggestion(val word: String, val score: Float)

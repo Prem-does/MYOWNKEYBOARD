@@ -88,6 +88,7 @@ class CalmKeyboardView(context: Context) : View(context) {
     private val suggestionGapDp = 8f
 
     var listener: ((Int) -> Unit)? = null
+    var suggestionListener: ((String) -> Unit)? = null
     private var downKey: Key? = null
 
     fun reset() {
@@ -174,20 +175,23 @@ class CalmKeyboardView(context: Context) : View(context) {
         val thirdRowY = row(2f)
         val unit = cellW
         val wide = unit * 1.5f
+        val gap = keyGap
+        val rowLeft = contentLeft
+        val shiftRight = rowLeft + wide
 
         addKey(
             KEY_SHIFT,
             shiftLabel(),
-            RectF(0f, thirdRowY, wide, thirdRowY + rowHeight),
+            RectF(rowLeft, thirdRowY, shiftRight, thirdRowY + rowHeight),
             KeyRole.FUNCTION
         )
 
         "zxcvbnm".forEachIndexed { index, c ->
-            val x = wide + index * unit
+            val x = shiftRight + gap + index * (unit + gap)
             addKey(c.code, labelFor(c), RectF(x, thirdRowY, x + unit, thirdRowY + rowHeight))
         }
 
-        val deleteX = wide + 7f * unit
+        val deleteX = shiftRight + gap + 7f * (unit + gap)
         addKey(
             KEY_DEL,
             "<",
@@ -204,7 +208,8 @@ class CalmKeyboardView(context: Context) : View(context) {
         val leftWidth = maxOf(72f, unit * 1.5f)
         val rightWidth = maxOf(72f, unit * 1.5f)
         val gap = keyGap
-        val spaceWidth = width - contentLeft * 2f - leftWidth - rightWidth * 2f - gap * 2f
+        val keyAreaWidth = width - contentLeft * 2f
+        val spaceWidth = keyAreaWidth - leftWidth - rightWidth * 2f - gap * 2f
 
         addKey(KEY_MODE, "?123", RectF(contentLeft, rowY, contentLeft + leftWidth, rowY + rowHeight), KeyRole.ACTION)
         addKey(
@@ -228,12 +233,13 @@ class CalmKeyboardView(context: Context) : View(context) {
     }
 
     fun updateSuggestions(suggestions: List<String>) {
-        suggestionLabels = if (suggestions.isEmpty()) listOf("the", "to", "and") else suggestions
+        suggestionLabels = suggestions
         rebuild()
         invalidate()
     }
 
     private fun buildSuggestions() {
+        if (suggestionLabels.isEmpty()) return
         val gap = suggestionGapDp * density
         val keyAreaWidth = width - contentLeft * 2f - gap * (suggestionLabels.size - 1)
         val segmentWidth = keyAreaWidth / suggestionLabels.size.toFloat()
@@ -257,22 +263,25 @@ class CalmKeyboardView(context: Context) : View(context) {
 
         val r2y = row(2f)
         val sym2 = listOf('.', ',', '?', '!', '\'', '"', ':', ';')
-        val pad = col(0.25f)
+        val gap = keyGap
+        val pad = contentLeft
+        val wide = maxOf(72f, cellW * 1.5f)
+
         sym2.forEachIndexed { i, c ->
-            val x = pad + i * cellW
+            val x = pad + i * (cellW + gap)
             addKey(c.code, c.toString(), RectF(x, r2y, x + cellW, r2y + rowHeight))
         }
-        val delX = pad + 8 * cellW
-        addKey(KEY_DEL, "<", RectF(delX, r2y, delX + col(1.5f), r2y + rowHeight), KeyRole.FUNCTION)
+        val delX = pad + sym2.size * (cellW + gap)
+        addKey(KEY_DEL, "<", RectF(delX, r2y, delX + wide, r2y + rowHeight), KeyRole.FUNCTION)
 
         val r3y = row(3f)
-        val modeW = col(1.5f)
-        val enterW = col(1.5f)
-        val spaceW = width - modeW - enterW
+        val leftWidth = wide
+        val rightWidth = wide
+        val spaceWidth = width - contentLeft * 2f - leftWidth - rightWidth - gap * 2f
 
-        addKey(KEY_MODE, "ABC", RectF(0f, r3y, modeW, r3y + rowHeight), KeyRole.FUNCTION)
-        addKey(KEY_SPACE, "", RectF(modeW, r3y, modeW + spaceW, r3y + rowHeight), KeyRole.ACTION)
-        addKey(KEY_ENTER, enterLabel, RectF(modeW + spaceW, r3y, width.toFloat(), r3y + rowHeight), KeyRole.FUNCTION)
+        addKey(KEY_MODE, "ABC", RectF(contentLeft, r3y, contentLeft + leftWidth, r3y + rowHeight), KeyRole.FUNCTION)
+        addKey(KEY_SPACE, "", RectF(contentLeft + leftWidth + gap, r3y, contentLeft + leftWidth + gap + spaceWidth, r3y + rowHeight), KeyRole.ACTION)
+        addKey(KEY_ENTER, enterLabel, RectF(contentLeft + leftWidth + gap + spaceWidth + gap, r3y, contentLeft + leftWidth + gap + spaceWidth + gap + rightWidth, r3y + rowHeight), KeyRole.FUNCTION)
     }
 
     private fun buildRow(
@@ -333,16 +342,24 @@ class CalmKeyboardView(context: Context) : View(context) {
     }
 
     private fun drawSuggestions(canvas: Canvas) {
+        if (suggestionLabels.isEmpty()) return
+
         val labelSize = suggestionHeight * 0.42f
         paint.textSize = labelSize
         paint.typeface = Typeface.SANS_SERIF
+        paint.color = Color.WHITE
+        paint.textAlign = Paint.Align.CENTER
 
-        for (key in keys.filter { it.role == KeyRole.SUGGESTION }) {
-            canvas.drawRoundRect(key.bounds, 16f, 16f, suggestionFillPaint)
-            canvas.drawRoundRect(key.bounds, 16f, 16f, suggestionStrokePaint)
-
+        val suggestionKeys = keys.filter { it.role == KeyRole.SUGGESTION }
+        suggestionKeys.forEachIndexed { index, key ->
+            val displayLabel = key.label.replaceFirstChar { it.uppercaseChar() }
             val baseline = key.bounds.centerY() - (paint.ascent() + paint.descent()) / 2f
-            canvas.drawText(key.label, key.bounds.centerX(), baseline, paint)
+            canvas.drawText(displayLabel, key.bounds.centerX(), baseline, paint)
+
+            if (index < suggestionKeys.size - 1) {
+                val separatorX = key.bounds.right + key.bounds.width() * 0.05f
+                canvas.drawText("|", separatorX, baseline, mutedPaint)
+            }
         }
     }
 

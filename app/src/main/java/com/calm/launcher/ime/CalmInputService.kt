@@ -44,6 +44,7 @@ class CalmInputService : InputMethodService() {
         keyboardView.updateShiftState(SHIFT_OFF)
         keyboardView.reset(prefs.startInSymbols)
         info?.let { updateEnterLabel(it) }
+        updateSuggestions()
     }
 
     private fun updateEnterLabel(info: EditorInfo) {
@@ -115,8 +116,11 @@ class CalmInputService : InputMethodService() {
     }
 
     private fun handleChar(code: Int) {
-        val char = code.toChar().toString()
-        currentInputConnection?.commitText(char, 1)
+        var char = code.toChar()
+        if (Character.isLetter(char) && shiftState != SHIFT_OFF) {
+            char = char.uppercaseChar()
+        }
+        currentInputConnection?.commitText(char.toString(), 1)
 
         if (prefs.autoShiftReset && shiftState == SHIFT_ON && Character.isLetter(code)) {
             shiftState = SHIFT_OFF
